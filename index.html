@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fusic Studio X | Ultimate Fix - Long Audio</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Teko:wght@400;600&display=swap');
+
+        :root {
+            --bg-deep: #020005;
+            --neon-cyan: #00ffff;
+            --neon-pink: #ff00ff;
+            --neon-yellow: #ffff00;
+            --neon-green: #39ff14;
+            --neon-orange: #ff6600;
+            --glass-bg: rgba(5, 0, 15, 0.7);
+            --text-main: #ffffff;
+        }
+
+        * { box-sizing: border-box; font-family: 'Teko', sans-serif; letter-spacing: 1px; }
+        body {
+            margin: 0; padding: 0; background: var(--bg-deep); color: var(--text-main);
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        .neon-grid {
+            position: fixed; bottom: 0; left: -50%; width: 200%; height: 60%;
+            background-image: linear-gradient(transparent 65%, rgba(255,0,255,0.8) 75%, transparent 100%),
+                              linear-gradient(90deg, transparent 48%, rgba(0,255,255,0.5) 50%, transparent 52%);
+            background-size: 100% 40px, 40px 100%;
+            transform: perspective(300px) rotateX(60deg);
+            animation: gridMove 2s linear infinite;
+            z-index: 0; opacity: 0.4; pointer-events: none;
+        }
+        @keyframes gridMove { 0% { background-position: 0 0, 0 0; } 100% { background-position: 0 40px, 0 0; } }
+
+        .app-container { display: flex; flex: 1; height: calc(100vh - 110px); z-index: 1; position: relative; }
+
+        .sidebar {
+            width: 320px; background: var(--glass-bg); backdrop-filter: blur(20px);
+            border-right: 2px solid var(--neon-cyan); box-shadow: 10px 0 30px rgba(0,255,255,0.2);
+            display: flex; flex-direction: column; height: 100%;
+            padding: 0 25px;
+        }
+
+        .brand-section {
+            display: flex; align-items: center; gap: 15px;
+            padding: 25px 0 15px 0; border-bottom: 2px dashed var(--neon-pink);
+            flex-shrink: 0;
+        }
+        .fusic-logo {
+            width: 70px; height: 70px; border-radius: 12px; object-fit: cover;
+            border: 2px solid var(--neon-cyan); box-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-pink);
+            background: #111; animation: logoPulse 2s infinite alternate;
+        }
+        @keyframes logoPulse { 0% { box-shadow: 0 0 10px var(--neon-cyan); } 100% { box-shadow: 0 0 30px var(--neon-pink); } }
+
+        .brand-text h1 { font-family: 'Orbitron'; font-size: 28px; margin: 0; color: #fff; text-shadow: 0 0 15px var(--neon-cyan); line-height: 1; }
+        .brand-text span { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
+        .brand-badge { background: var(--neon-yellow); color: #000; font-size: 14px; padding: 2px 8px; border-radius: 4px; font-weight: bold; display: inline-block; margin-top: 5px;}
+
+        .sidebar-actions { flex-shrink: 0; margin: 20px 0; display: flex; flex-direction: column; gap: 10px; }
+
+        .nav-btn {
+            background: transparent; border: 2px solid var(--neon-cyan); color: #fff; font-size: 20px;
+            padding: 12px; cursor: pointer; border-radius: 8px; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(0,255,255,0.2);
+        }
+        .nav-btn:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 30px var(--neon-cyan); }
+        .nav-btn.pink { border-color: var(--neon-pink); box-shadow: 0 0 10px rgba(255,0,255,0.2); }
+        .nav-btn.pink:hover { background: var(--neon-pink); color: #fff; }
+        .nav-btn.green { border-color: var(--neon-green); box-shadow: 0 0 10px rgba(0,255,0,0.2); }
+        .nav-btn.green:hover { background: var(--neon-green); color: #000; }
+
+        .library-section {
+            flex: 1 1 0;
+            overflow-y: auto;
+            padding-bottom: 25px;
+            margin-bottom: 25px;
+            padding-right: 5px;
+        }
+        .library-title {
+            font-size: 22px; color: var(--neon-yellow); text-shadow: 0 0 10px var(--neon-yellow);
+            position: sticky; top: 0; background: var(--glass-bg); backdrop-filter: blur(15px);
+            padding: 15px 0 5px; z-index: 2; margin-bottom: 10px;
+        }
+        .track-list { display: flex; flex-direction: column; gap: 10px; }
+        .track-item {
+            padding: 10px 15px; border-radius: 8px; background: rgba(0,0,0,0.5);
+            border: 1px solid #333; border-left: 4px solid #555;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .track-item.playing { border-color: var(--neon-pink); border-left: 6px solid var(--neon-pink); background: rgba(255,0,255,0.1); }
+        .track-name { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; font-family: 'Orbitron'; }
+        .del-btn { background: none; border: none; color: #ff0055; cursor: pointer; font-size: 20px; }
+
+        .main-view { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .hero-section { display: flex; align-items: center; gap: 30px; padding: 25px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); border-radius: 15px; border: 2px solid var(--neon-cyan); }
+        .art-img { width: 180px; height: 180px; object-fit: cover; border-radius: 10px; border: 2px solid var(--neon-pink); }
+        .header-info h1 { font-family: 'Orbitron'; font-size: 50px; text-shadow: 0 0 20px var(--neon-cyan); }
+
+        .editor-section { background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px; }
+        .canvas-container { width: 100%; height: 160px; background: #000; border-radius: 10px; margin-bottom: 20px; }
+        canvas { width: 100%; height: 100%; }
+
+        .trimmer-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .trim-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; }
+        .fx-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 15px; margin-bottom: 25px; }
+        .fx-card { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; }
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 8px; background: #222; border-radius: 4px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--neon-cyan); cursor: pointer; }
+
+        .btn-export { width: 100%; background: transparent; border: 3px solid var(--neon-green); color: var(--neon-green); padding: 15px; font-size: 24px; cursor: pointer; }
+        .btn-export:hover:not(:disabled) { background: var(--neon-green); color: #000; }
+
+        .player-bar {
+            height: 110px; background: rgba(2,0,5,0.95); border-top: 2px solid var(--neon-cyan);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 30px;
+            position: fixed; bottom: 0; width: 100%; z-index: 100;
+        }
+        .btn-play-circle {
+            width: 60px; height: 60px; border-radius: 50%; background: #000; color: var(--neon-cyan);
+            border: 3px solid var(--neon-cyan); font-size: 24px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 0 20px var(--neon-cyan);
+        }
+        .btn-play-circle.stop { border-color: var(--neon-pink); color: var(--neon-pink); }
+        .btn-play-circle.loop.active { background: var(--neon-green); color: #000; }
+        .btn-play-circle.reverse.active { background: var(--neon-orange); color: #000; }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="neon-grid"></div>
+
+<div class="app-container">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="drop-zone">
+        <div class="brand-section">
+            <img src="C:/python/web/logo fusic.png" class="fusic-logo" onerror="this.src='https://picsum.photos/seed/fusiclogo/100'; this.title='Logo Fusic tidak ditemukan, pakai fallback';">
+            <div class="brand-text">
+                <h1>FUSIC <span>STUDIO</span></h1>
+                <div class="brand-badge">FAIZAN PRO</div>
+            </div>
+        </div>
+
+        <div class="sidebar-actions">
+            <button class="nav-btn" onclick="document.getElementById('audio-upload').click()">📂 IMPORT MP3<input type="file" id="audio-upload" accept="audio/*" multiple style="display:none;"></button>
+            <button class="nav-btn pink" id="btn-record-mic">🎙️ REKAM VOCAL</button>
+            <button class="nav-btn green" id="btn-rainbow">🌈 RAINBOW UI</button>
+        </div>
+
+        <div class="library-section">
+            <div class="library-title">DATABASE TRACK</div>
+            <div class="track-list" id="track-list"></div>
+        </div>
+    </div>
+
+    <!-- MAIN VIEW -->
+    <div class="main-view">
+        <div class="hero-section">
+            <img src="https://picsum.photos/seed/fusic/400/400" class="art-img" id="main-art-img">
+            <div class="header-info">
+                <h1 id="main-title">BELUM ADA LAGU</h1>
+                <p id="main-meta" style="color:var(--neon-yellow);">SIAP MENERIMA AUDIO...</p>
+            </div>
+        </div>
+
+        <div class="editor-section">
+            <div style="display:flex; justify-content:space-between;">
+                <span style="font-family:'Orbitron';color:var(--neon-cyan);">🎛️ FUSIC NEON EDITOR</span>
+                <span id="render-status" style="color:var(--neon-green);"></span>
+            </div>
+            <div class="canvas-container"><canvas id="waveform"></canvas></div>
+
+            <div class="trimmer-controls">
+                <div class="trim-box"><label>START <span id="val-trim-start">0.0s</span></label><input type="range" id="trim-start" min="0" max="100" step="0.1" value="0" disabled></div>
+                <div class="trim-box"><label>END <span id="val-trim-end">0.0s</span></label><input type="range" id="trim-end" min="0" max="100" step="0.1" value="100" disabled></div>
+            </div>
+
+            <div class="fx-grid">
+                <div class="fx-card"><label>LOW <span id="val-eq-low">0</span></label><input type="range" id="eq-low" min="-12" max="12" step="0.5" value="0"></div>
+                <div class="fx-card"><label>MID <span id="val-eq-mid">0</span></label><input type="range" id="eq-mid" min="-12" max="12" step="0.5" value="0"></div>
+                <div class="fx-card"><label>HIGH <span id="val-eq-high">0</span></label><input type="range" id="eq-high" min="-12" max="12" step="0.5" value="0"></div>
+                <div class="fx-card"><label>REVERB <span id="val-reverb">0%</span></label><input type="range" id="reverb-wet" min="0" max="1" step="0.05" value="0"></div>
+                <div class="fx-card"><label>PITCH <span id="val-pitch">0 ct</span></label><input type="range" id="detune" min="-1200" max="1200" step="10" value="0"></div>
+                <div class="fx-card"><label>ROBOT <span id="val-robot">0</span></label><input type="range" id="robot-mix" min="0" max="1" step="0.1" value="0"></div>
+                <div class="fx-card"><label>STUTTER <span id="val-stutter">0 Hz</span></label><input type="range" id="stutter-freq" min="1" max="50" step="1" value="1"></div>
+                <div class="fx-card"><label>DELAY <span id="val-delay">0</span></label><input type="range" id="delay-time" min="0" max="0.9" step="0.05" value="0"></div>
+            </div>
+
+            <div style="display:flex; gap:15px; margin-bottom:25px; flex-wrap:wrap;">
+                <button class="nav-btn" id="btn-reverse">↺ REVERSE</button>
+                <button class="btn-export" id="btn-export" disabled>💾 RENDER WAV</button>
+                <button class="nav-btn pink" id="btn-random-fx">🎲 RANDOM FX</button>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="nav-btn preset-btn" data-preset="1">A</button>
+                <button class="nav-btn preset-btn" data-preset="2">B</button>
+                <button class="nav-btn preset-btn" data-preset="3">C</button>
+                <button class="nav-btn preset-btn" data-preset="4">D</button>
+                <button class="nav-btn green" id="btn-save-state">💾 SAVE</button>
+                <button class="nav-btn green" id="btn-load-state">📂 LOAD</button>
+            </div>
+
+            <div style="margin-top:20px;">
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:5px;">
+                    <span style="color:var(--neon-cyan);">🎹 STEP SEQ</span>
+                    <button id="btn-seq-play" class="nav-btn" style="padding:5px 15px;">▶</button>
+                    <span style="color:var(--neon-pink);">BPM:</span>
+                    <input type="number" id="seq-bpm" value="120" style="width:60px; background:#111; color:#fff; border:1px solid var(--neon-cyan);">
+                </div>
+                <div id="step-grid" style="display:grid; grid-template-columns: repeat(16,1fr); gap:4px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PLAYER BAR -->
+<div class="player-bar">
+    <div style="width:25%;color:var(--neon-cyan);" id="bottom-status">MESIN MATI</div>
+    <div style="display:flex; gap:20px; align-items:center;">
+        <button class="btn-play-circle" id="btn-master-play" disabled>▶</button>
+        <button class="btn-play-circle loop" id="btn-loop" disabled>↻</button>
+        <button class="btn-play-circle stop" id="btn-master-stop" disabled>■</button>
+    </div>
+    <div style="display:flex; gap:15px; align-items:center; width:30%;">
+        <span id="time-current">0:00</span>
+        <div style="flex:1; height:8px; background:#111;"><div id="progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));"></div></div>
+        <span id="time-total">0:00</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <span style="color:var(--neon-yellow);">VOL</span>
+        <input type="range" id="master-vol" min="0" max="1.5" step="0.05" value="1.0" style="width:120px;">
+    </div>
+</div>
+
+<script>
+    // ==================== DATABASE & CORE ====================
+    let db, tracksCache = {}, selectedTrackId = null;
+    let audioCtx, currentBuffer, sourceNode, gainNode, analyserNode;
+    let lowEqNode, midEqNode, highEqNode, delayNode, delayGain, reverbNode, reverbGain, dryGain, robotOsc, robotGain;
+    let isPlaying = false, playStartTime, offsetTime, animationId, progressInterval;
+    let loopActive = false, reverseActive = false;
+    let stutterInterval;
+    let seqPlaying = false, seqStep = 0, seqInterval;
+    let seqTracks = { kick: Array(16).fill(false), snare: Array(16).fill(false), hihat: Array(16).fill(false), clap: Array(16).fill(false) };
+    let isLongFile = false, longFileBlobURL = null, longFileAudioElement = null, longFileSourceNode = null;
+
+    // DOM Elements
+    const btnPlay = document.getElementById('btn-master-play'), btnStop = document.getElementById('btn-master-stop');
+    const btnLoop = document.getElementById('btn-loop'), btnReverse = document.getElementById('btn-reverse');
+    const btnExport = document.getElementById('btn-export');
+    const sliderTrimStart = document.getElementById('trim-start'), sliderTrimEnd = document.getElementById('trim-end');
+    const canvas = document.getElementById('waveform'), ctx = canvas.getContext('2d');
+    const mainTitle = document.getElementById('main-title'), mainMeta = document.getElementById('main-meta');
+    const mainArtImg = document.getElementById('main-art-img');
+    const statusEl = document.getElementById('render-status');
+
+    // ==================== INDEXEDDB ====================
+    const request = indexedDB.open("FusicStudioDB", 1);
+    request.onupgradeneeded = e => e.target.result.createObjectStore("audio_files", { keyPath: "id", autoIncrement: true });
+    request.onsuccess = e => { db = e.target.result; loadTracks(); };
+
+    function loadTracks() {
+        if (!db) return;
+        db.transaction(["audio_files"], "readonly").objectStore("audio_files").getAll().onsuccess = e => {
+            const list = document.getElementById('track-list');
+            list.innerHTML = ''; tracksCache = {};
+            e.target.result.forEach(item => {
+                tracksCache[item.id] = item;
+                const div = document.createElement('div');
+                div.className = `track-item ${selectedTrackId === item.id ? 'playing' : ''}`;
+                div.onclick = () => selectTrack(item.id);
+                div.innerHTML = `<span class="track-name">${item.name}</span><button class="del-btn" onclick="event.stopPropagation(); deleteTrack(${item.id})">✖</button>`;
+                list.appendChild(div);
+            });
+        };
+    }
+
+    function saveTrack(name, arrayBuffer) {
+        const tx = db.transaction(["audio_files"], "readwrite");
+        tx.objectStore("audio_files").add({ name, data: arrayBuffer });
+        tx.oncomplete = () => loadTracks();
+    }
+    window.deleteTrack = id => {
+        db.transaction(["audio_files"], "readwrite").objectStore("audio_files").delete(id).onsuccess = () => {
+            if (selectedTrackId === id) resetPlayer();
+            loadTracks();
+        };
+    };
+
+    document.getElementById('audio-upload').addEventListener('change', e => {
+        [...e.target.files].forEach(f => {
+            const r = new FileReader(); r.onload = ev => saveTrack(f.name, ev.target.result); r.readAsArrayBuffer(f);
+        });
+    });
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('dragover', e => e.preventDefault());
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        [...e.dataTransfer.files].forEach(f => {
+            const r = new FileReader(); r.onload = ev => saveTrack(f.name, ev.target.result); r.readAsArrayBuffer(f);
+        });
+    });
+
+    let mediaRecorder, chunks = [], isRecording = false;
+    document.getElementById('btn-record-mic').addEventListener('click', async (e) => {
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream); chunks = [];
+                mediaRecorder.ondataavailable = ev => { if (ev.data.size > 0) chunks.push(ev.data); };
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    const r = new FileReader(); r.onload = ev => saveTrack(`Rekaman_${Date.now()}.webm`, ev.target.result); r.readAsArrayBuffer(blob);
+                    stream.getTracks().forEach(t => t.stop());
+                };
+                mediaRecorder.start(); isRecording = true;
+                e.target.innerHTML = "🛑 STOP REKAM"; e.target.style.background = "#ff0055";
+            } catch (err) { alert("Gagal mengakses mikrofon."); }
+        } else {
+            mediaRecorder.stop(); isRecording = false;
+            e.target.innerHTML = "🎙️ REKAM VOCAL"; e.target.style.background = "transparent";
+        }
+    });
+
+    // ==================== AUDIO ENGINE (dengan dukungan file panjang) ====================
+    function selectTrack(id) {
+        stopAudio(); selectedTrackId = id; loadTracks();
+        const item = tracksCache[id];
+        if (!item) return;
+        mainTitle.textContent = "MEMBACA..."; mainArtImg.src = `https://picsum.photos/seed/fusic${id}/400/400`;
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Cek apakah file besar ( > 1 jam = 3600 detik )
+        const blob = new Blob([item.data], { type: 'audio/mpeg' });
+        const tempAudio = new Audio(URL.createObjectURL(blob));
+        tempAudio.addEventListener('loadedmetadata', () => {
+            const duration = tempAudio.duration;
+            if (duration > 3600) {
+                // File panjang: gunakan streaming, jangan decode buffer
+                isLongFile = true;
+                longFileBlobURL = URL.createObjectURL(blob);
+                mainTitle.textContent = item.name.toUpperCase();
+                mainMeta.textContent = `DURASI: ${duration.toFixed(2)} DETIK (STREAMING)`;
+                // Set trim slider max ke durasi
+                sliderTrimStart.disabled = false; sliderTrimEnd.disabled = false;
+                btnPlay.disabled = false; btnExport.disabled = false; btnLoop.disabled = false;
+                sliderTrimStart.max = duration; sliderTrimEnd.max = duration;
+                sliderTrimStart.value = 0; sliderTrimEnd.value = duration;
+                document.getElementById('time-total').textContent = formatTime(duration);
+                updateTrimLabels();
+                // Disable reverse untuk file panjang
+                btnReverse.disabled = true;
+                currentBuffer = null; // tidak ada buffer
+                drawStaticWaveform();
+            } else {
+                // File pendek: decode biasa
+                isLongFile = false;
+                btnReverse.disabled = false;
+                audioCtx.decodeAudioData(item.data.slice(0), buffer => {
+                    currentBuffer = buffer;
+                    mainTitle.textContent = item.name.toUpperCase();
+                    mainMeta.textContent = `DURASI: ${buffer.duration.toFixed(2)} DETIK`;
+                    sliderTrimStart.disabled = false; sliderTrimEnd.disabled = false;
+                    btnPlay.disabled = false; btnExport.disabled = false; btnLoop.disabled = false;
+                    sliderTrimStart.max = buffer.duration; sliderTrimEnd.max = buffer.duration;
+                    sliderTrimStart.value = 0; sliderTrimEnd.value = buffer.duration;
+                    document.getElementById('time-total').textContent = formatTime(buffer.duration);
+                    updateTrimLabels();
+                    drawStaticWaveform();
+                }, () => alert("Gagal decode audio!"));
+            }
+            tempAudio.remove();
+        });
+    }
+
+    function resetPlayer() {
+        stopAudio(); currentBuffer = null; selectedTrackId = null; isLongFile = false;
+        if (longFileBlobURL) URL.revokeObjectURL(longFileBlobURL);
+        longFileBlobURL = null; longFileAudioElement = null;
+        mainTitle.textContent = "BELUM ADA LAGU"; btnPlay.disabled = true; btnExport.disabled = true; btnLoop.disabled = true;
+        btnReverse.disabled = false;
+    }
+
+    function createImpulseResponse(duration = 2, decay = 2) {
+        const sr = audioCtx.sampleRate, length = sr * duration;
+        const impulse = audioCtx.createBuffer(2, length, sr);
+        for (let ch = 0; ch < 2; ch++) {
+            const data = impulse.getChannelData(ch);
+            for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+        }
+        return impulse;
+    }
+    function reverseBuffer(buffer) {
+        const nb = audioCtx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+        for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+            const orig = buffer.getChannelData(ch), rev = nb.getChannelData(ch);
+            for (let i = 0; i < buffer.length; i++) rev[i] = orig[buffer.length - 1 - i];
+        }
+        return nb;
+    }
+
+    function buildGraph(useStreaming = false) {
+        if (useStreaming) {
+            if (!longFileAudioElement) {
+                longFileAudioElement = new Audio(longFileBlobURL);
+                longFileAudioElement.loop = loopActive;
+                longFileSourceNode = audioCtx.createMediaElementSource(longFileAudioElement);
+            }
+            sourceNode = longFileSourceNode;
+            // Set playbackRate untuk pitch (tidak bisa via detune di MediaElement)
+            longFileAudioElement.playbackRate = 1.0; // nanti diubah
+        } else {
+            sourceNode = audioCtx.createBufferSource();
+            sourceNode.buffer = reverseActive ? reverseBuffer(currentBuffer) : currentBuffer;
+            sourceNode.detune.value = parseFloat(document.getElementById('detune').value);
+        }
+
+        lowEqNode = audioCtx.createBiquadFilter(); lowEqNode.type = 'lowshelf'; lowEqNode.frequency.value = 200;
+        lowEqNode.gain.value = parseFloat(document.getElementById('eq-low').value);
+        midEqNode = audioCtx.createBiquadFilter(); midEqNode.type = 'peaking'; midEqNode.frequency.value = 1000; midEqNode.Q.value = 0.7;
+        midEqNode.gain.value = parseFloat(document.getElementById('eq-mid').value);
+        highEqNode = audioCtx.createBiquadFilter(); highEqNode.type = 'highshelf'; highEqNode.frequency.value = 4000;
+        highEqNode.gain.value = parseFloat(document.getElementById('eq-high').value);
+        gainNode = audioCtx.createGain(); gainNode.gain.value = parseFloat(document.getElementById('master-vol').value);
+
+        delayNode = audioCtx.createDelay(1.0); delayGain = audioCtx.createGain();
+        delayGain.gain.value = parseFloat(document.getElementById('delay-time').value);
+        reverbNode = audioCtx.createConvolver(); reverbNode.buffer = createImpulseResponse();
+        reverbGain = audioCtx.createGain(); dryGain = audioCtx.createGain();
+        const rWet = parseFloat(document.getElementById('reverb-wet').value);
+        reverbGain.gain.value = rWet; dryGain.gain.value = 1 - rWet;
+
+        robotOsc = audioCtx.createOscillator(); robotOsc.type = 'sine'; robotOsc.frequency.value = 100;
+        robotGain = audioCtx.createGain(); robotGain.gain.value = parseFloat(document.getElementById('robot-mix').value);
+        const robotDry = audioCtx.createGain(); robotDry.gain.value = 1 - robotGain.gain.value;
+        const robotWet = audioCtx.createGain(); robotWet.gain.value = robotGain.gain.value;
+        const ampMod = audioCtx.createGain();
+        robotOsc.connect(ampMod.gain);
+        robotOsc.start();
+
+        const stutterGain = audioCtx.createGain(); stutterGain.gain.value = 1;
+        analyserNode = audioCtx.createAnalyser(); analyserNode.fftSize = 512;
+
+        sourceNode.connect(lowEqNode);
+        lowEqNode.connect(midEqNode); midEqNode.connect(highEqNode);
+        highEqNode.connect(gainNode);
+        highEqNode.connect(dryGain);
+        highEqNode.connect(reverbNode); reverbNode.connect(reverbGain);
+        dryGain.connect(gainNode); reverbGain.connect(gainNode);
+        highEqNode.connect(delayNode); delayNode.connect(delayGain); delayGain.connect(delayNode); delayGain.connect(gainNode);
+        highEqNode.connect(robotDry);
+        highEqNode.connect(ampMod); ampMod.connect(robotWet);
+        robotDry.connect(gainNode); robotWet.connect(gainNode);
+        gainNode.connect(stutterGain);
+        stutterGain.connect(analyserNode);
+        analyserNode.connect(audioCtx.destination);
+
+        clearInterval(stutterInterval);
+        const stutterFreq = parseFloat(document.getElementById('stutter-freq').value);
+        if (stutterFreq > 1) stutterInterval = setInterval(() => { stutterGain.gain.value = stutterGain.gain.value === 1 ? 0 : 1; }, 1000 / stutterFreq);
+    }
+
+    function playAudio() {
+        if ((!currentBuffer && !isLongFile) || !audioCtx) return;
+        stopAudio(true);
+
+        if (isLongFile) {
+            buildGraph(true);
+            const start = parseFloat(sliderTrimStart.value), end = parseFloat(sliderTrimEnd.value);
+            longFileAudioElement.currentTime = start;
+            longFileAudioElement.playbackRate = parseFloat(document.getElementById('detune').value) / 1200 + 1; // Konversi detune cents ke rate
+            longFileAudioElement.play();
+            isPlaying = true;
+            playStartTime = audioCtx.currentTime;
+            offsetTime = start;
+            btnPlay.textContent = "⏸";
+            btnStop.disabled = false;
+            document.getElementById('bottom-status').textContent = loopActive ? "LOOP AKTIF" : "MESIN MENYALA (STREAM)";
+            // Loop handling untuk streaming
+            longFileAudioElement.ontimeupdate = () => {
+                if (longFileAudioElement.currentTime >= end) {
+                    if (loopActive) {
+                        longFileAudioElement.currentTime = start;
+                    } else {
+                        stopAudio();
+                    }
+                }
+                const pos = longFileAudioElement.currentTime;
+                document.getElementById('time-current').textContent = formatTime(pos);
+                document.getElementById('progress-bar').style.width = (pos / (sliderTrimEnd.max || 1) * 100) + "%";
+            };
+            animateVisualizer();
+        } else {
+            buildGraph(false);
+            const start = parseFloat(sliderTrimStart.value), end = parseFloat(sliderTrimEnd.value);
+            sourceNode.start(0, start, end - start);
+            isPlaying = true; playStartTime = audioCtx.currentTime; offsetTime = start;
+            btnPlay.textContent = "⏸"; btnStop.disabled = false;
+            document.getElementById('bottom-status').textContent = loopActive ? "LOOP AKTIF" : (reverseActive ? "REVERSE ON" : "MESIN MENYALA");
+            sourceNode.onended = () => { if (loopActive && isPlaying) playAudio(); else stopAudio(); };
+            animateVisualizer();
+            progressInterval = setInterval(() => {
+                if (!isPlaying) return;
+                const pos = offsetTime + (audioCtx.currentTime - playStartTime) * sourceNode.playbackRate.value;
+                document.getElementById('time-current').textContent = formatTime(pos);
+                document.getElementById('progress-bar').style.width = (pos / currentBuffer.duration * 100) + "%";
+                if (pos >= end && !loopActive) stopAudio();
+            }, 100);
+        }
+    }
+
+    function stopAudio(keepState = false) {
+        if (longFileAudioElement) {
+            longFileAudioElement.pause();
+            longFileAudioElement.ontimeupdate = null;
+        }
+        if (sourceNode && !isLongFile) { sourceNode.onended = null; try { sourceNode.stop(); } catch(e){} }
+        if (robotOsc) { try { robotOsc.stop(); } catch(e){} }
+        clearInterval(stutterInterval);
+        if (animationId) cancelAnimationFrame(animationId);
+        clearInterval(progressInterval);
+        isPlaying = false;
+        if (!keepState) btnPlay.textContent = "▶";
+        btnStop.disabled = true;
+        if (!keepState) document.getElementById('bottom-status').textContent = "MESIN MATI";
+        document.getElementById('progress-bar').style.width = "0%";
+        drawStaticWaveform();
+    }
+
+    btnPlay.addEventListener('click', () => isPlaying ? stopAudio() : playAudio());
+    btnStop.addEventListener('click', () => stopAudio());
+
+    btnLoop.addEventListener('click', () => {
+        loopActive = !loopActive;
+        btnLoop.classList.toggle('active', loopActive);
+        if (longFileAudioElement) longFileAudioElement.loop = loopActive;
+    });
+    btnReverse.addEventListener('click', () => {
+        if (isLongFile) { alert("Reverse tidak tersedia untuk file panjang."); return; }
+        reverseActive = !reverseActive;
+        btnReverse.classList.toggle('active', reverseActive);
+        if (isPlaying) { stopAudio(); playAudio(); }
+    });
+
+    // Slider & labels (sama)
+    sliderTrimStart.addEventListener('input', () => {
+        if (parseFloat(sliderTrimStart.value) >= parseFloat(sliderTrimEnd.value)) sliderTrimStart.value = sliderTrimEnd.value - 0.1;
+        updateTrimLabels();
+    });
+    sliderTrimEnd.addEventListener('input', () => {
+        if (parseFloat(sliderTrimEnd.value) <= parseFloat(sliderTrimStart.value)) sliderTrimEnd.value = sliderTrimStart.value + 0.1;
+        updateTrimLabels();
+    });
+    function updateTrimLabels() {
+        document.getElementById('val-trim-start').textContent = parseFloat(sliderTrimStart.value).toFixed(1) + 's';
+        document.getElementById('val-trim-end').textContent = parseFloat(sliderTrimEnd.value).toFixed(1) + 's';
+    }
+    document.querySelectorAll('.fx-grid input').forEach(inp => inp.addEventListener('input', () => {
+        document.getElementById('val-eq-low').textContent = document.getElementById('eq-low').value;
+        document.getElementById('val-eq-mid').textContent = document.getElementById('eq-mid').value;
+        document.getElementById('val-eq-high').textContent = document.getElementById('eq-high').value;
+        document.getElementById('val-reverb').textContent = Math.round(document.getElementById('reverb-wet').value*100)+'%';
+        document.getElementById('val-pitch').textContent = document.getElementById('detune').value+' ct';
+        document.getElementById('val-robot').textContent = document.getElementById('robot-mix').value;
+        document.getElementById('val-stutter').textContent = document.getElementById('stutter-freq').value+' Hz';
+        document.getElementById('val-delay').textContent = document.getElementById('delay-time').value;
+    }));
+
+    // Visualizer (sama)
+    function animateVisualizer() {
+        if (!analyserNode) return;
+        animationId = requestAnimationFrame(animateVisualizer);
+        const data = new Uint8Array(analyserNode.frequencyBinCount);
+        analyserNode.getByteFrequencyData(data);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        const barW = canvas.width/data.length;
+        for (let i=0;i<data.length;i++) {
+            const v = data[i]/255;
+            ctx.fillStyle = `hsl(${200+v*80},100%,60%)`;
+            ctx.fillRect(i*barW, canvas.height-v*canvas.height, barW-1, v*canvas.height);
+        }
+    }
+    function drawStaticWaveform() {
+        if (!currentBuffer && !isLongFile) return;
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        // Gambar garis datar jika file panjang
+        ctx.strokeStyle = '#0ff'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height/2);
+        ctx.lineTo(canvas.width, canvas.height/2);
+        ctx.stroke();
+    }
+    function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; drawStaticWaveform(); }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Sequencer (sama)
+    function buildSeqGrid() {
+        const grid = document.getElementById('step-grid');
+        grid.innerHTML = '';
+        ['kick','snare','hihat','clap'].forEach(sound => {
+            for (let i=0;i<16;i++) {
+                const btn = document.createElement('button');
+                btn.style.background = seqTracks[sound][i] ? 'var(--neon-yellow)' : '#111';
+                btn.onclick = () => { seqTracks[sound][i] = !seqTracks[sound][i]; btn.style.background = seqTracks[sound][i] ? 'var(--neon-yellow)' : '#111'; };
+                grid.appendChild(btn);
+            }
+        });
+    }
+    buildSeqGrid();
+    document.getElementById('btn-seq-play').addEventListener('click', () => {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (seqPlaying) { clearInterval(seqInterval); seqPlaying = false; return; }
+        seqPlaying = true; seqStep = 0;
+        const bpm = parseInt(document.getElementById('seq-bpm').value)||120;
+        seqInterval = setInterval(() => {
+            if (seqTracks.kick[seqStep]) playSample('kick');
+            if (seqTracks.snare[seqStep]) playSample('snare');
+            if (seqTracks.hihat[seqStep]) playSample('hihat');
+            if (seqTracks.clap[seqStep]) playSample('clap');
+            seqStep = (seqStep+1)%16;
+        }, 60000/bpm/4);
+    });
+    function playSample(type) {
+        const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+        osc.connect(g); g.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        if (type==='kick'){ osc.frequency.value=60; g.gain.exponentialRampToValueAtTime(0.001, now+0.1);}
+        else if (type==='snare'){ osc.type='triangle'; osc.frequency.value=200; g.gain.exponentialRampToValueAtTime(0.001, now+0.05);}
+        else if (type==='hihat'){ osc.type='square'; osc.frequency.value=800; g.gain.exponentialRampToValueAtTime(0.001, now+0.03);}
+        else { osc.type='triangle'; osc.frequency.value=300; g.gain.exponentialRampToValueAtTime(0.001, now+0.08);}
+        osc.start(); osc.stop(now+0.1);
+    }
+
+    // Render WAV (hanya bisa untuk file pendek)
+    btnExport.addEventListener('click', async () => {
+        if (isLongFile) { alert("Render WAV belum mendukung file panjang."); return; }
+        if (!currentBuffer) return;
+        statusEl.textContent = "⏳ RENDERING..."; btnExport.disabled = true;
+        const offline = new OfflineAudioContext(2, 44100*(sliderTrimEnd.value-sliderTrimStart.value), 44100);
+        const src = offline.createBufferSource();
+        src.buffer = reverseActive ? reverseBuffer(currentBuffer) : currentBuffer;
+        src.detune.value = parseFloat(document.getElementById('detune').value);
+        src.connect(offline.destination);
+        src.start(0, sliderTrimStart.value, sliderTrimEnd.value-sliderTrimStart.value);
+        try {
+            const rendered = await offline.startRendering();
+            const blob = bufferToWav(rendered);
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Fusic_Render_${Date.now()}.wav`; a.click();
+            statusEl.textContent = "✅ SELESAI";
+        } catch (e) { statusEl.textContent = "❌ GAGAL"; }
+        btnExport.disabled = false;
+    });
+    function bufferToWav(abuffer) {
+        const numCh = abuffer.numberOfChannels, length = abuffer.length*numCh*2+44;
+        const buffer = new ArrayBuffer(length), view = new DataView(buffer);
+        let pos = 0;
+        function w16(d){ view.setUint16(pos,d,true); pos+=2; }
+        function w32(d){ view.setUint32(pos,d,true); pos+=4; }
+        w32(0x46464952); w32(length-8); w32(0x45564157); w32(0x20746d66); w32(16); w16(1); w16(numCh);
+        w32(abuffer.sampleRate); w32(abuffer.sampleRate*2*numCh); w16(numCh*2); w16(16); w32(0x61746164); w32(length-pos-4);
+        const channels = [];
+        for (let i=0;i<numCh;i++) channels.push(abuffer.getChannelData(i));
+        for (let i=0;i<abuffer.length;i++) {
+            for (let ch=0;ch<numCh;ch++) {
+                let s = Math.max(-1, Math.min(1, channels[ch][i]));
+                s = s<0 ? s*0x8000 : s*0x7FFF;
+                view.setInt16(pos, s, true); pos+=2;
+            }
+        }
+        return new Blob([buffer], {type:'audio/wav'});
+    }
+
+    // Rainbow, Random, Preset, State (sama)
+    document.getElementById('btn-rainbow').addEventListener('click', ()=>{
+        document.body.style.filter = document.body.style.filter==='hue-rotate(90deg)' ? 'none' : 'hue-rotate(90deg)';
+    });
+    document.getElementById('btn-random-fx').addEventListener('click', ()=>{
+        document.getElementById('eq-low').value = (Math.random()*24-12).toFixed(1);
+        document.getElementById('eq-mid').value = (Math.random()*24-12).toFixed(1);
+        document.getElementById('eq-high').value = (Math.random()*24-12).toFixed(1);
+        document.getElementById('reverb-wet').value = Math.random().toFixed(2);
+        document.getElementById('detune').value = (Math.random()*2400-1200).toFixed(0);
+        document.getElementById('robot-mix').value = Math.random().toFixed(1);
+        document.getElementById('stutter-freq').value = Math.floor(Math.random()*50)+1;
+        document.querySelectorAll('.fx-grid input').forEach(inp=>inp.dispatchEvent(new Event('input')));
+    });
+    document.querySelectorAll('.preset-btn').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+            const slot = btn.dataset.preset;
+            if (e.shiftKey) {
+                const state = {
+                    eq: [document.getElementById('eq-low').value, document.getElementById('eq-mid').value, document.getElementById('eq-high').value],
+                    reverb: document.getElementById('reverb-wet').value,
+                    delay: document.getElementById('delay-time').value,
+                    detune: document.getElementById('detune').value,
+                    robot: document.getElementById('robot-mix').value,
+                    stutter: document.getElementById('stutter-freq').value
+                };
+                localStorage.setItem(`fusic_preset_${slot}`, JSON.stringify(state));
+                alert(`Preset ${slot} disimpan!`);
+            } else {
+                const data = localStorage.getItem(`fusic_preset_${slot}`);
+                if (data) {
+                    const s = JSON.parse(data);
+                    document.getElementById('eq-low').value = s.eq[0];
+                    document.getElementById('eq-mid').value = s.eq[1];
+                    document.getElementById('eq-high').value = s.eq[2];
+                    document.getElementById('reverb-wet').value = s.reverb;
+                    document.getElementById('delay-time').value = s.delay;
+                    document.getElementById('detune').value = s.detune;
+                    document.getElementById('robot-mix').value = s.robot;
+                    document.getElementById('stutter-freq').value = s.stutter;
+                    document.querySelectorAll('.fx-grid input').forEach(inp=>inp.dispatchEvent(new Event('input')));
+                }
+            }
+        });
+    });
+    document.getElementById('btn-save-state').addEventListener('click', ()=>{
+        const state = {
+            eq: [document.getElementById('eq-low').value, document.getElementById('eq-mid').value, document.getElementById('eq-high').value],
+            reverb: document.getElementById('reverb-wet').value,
+            delay: document.getElementById('delay-time').value,
+            detune: document.getElementById('detune').value,
+            robot: document.getElementById('robot-mix').value,
+            stutter: document.getElementById('stutter-freq').value,
+            trimStart: sliderTrimStart.value, trimEnd: sliderTrimEnd.value
+        };
+        localStorage.setItem('fusic_state', JSON.stringify(state));
+        alert('State tersimpan!');
+    });
+    document.getElementById('btn-load-state').addEventListener('click', ()=>{
+        const s = JSON.parse(localStorage.getItem('fusic_state'));
+        if (!s) return;
+        document.getElementById('eq-low').value = s.eq[0];
+        document.getElementById('eq-mid').value = s.eq[1];
+        document.getElementById('eq-high').value = s.eq[2];
+        document.getElementById('reverb-wet').value = s.reverb;
+        document.getElementById('delay-time').value = s.delay;
+        document.getElementById('detune').value = s.detune;
+        document.getElementById('robot-mix').value = s.robot;
+        document.getElementById('stutter-freq').value = s.stutter;
+        sliderTrimStart.value = s.trimStart; sliderTrimEnd.value = s.trimEnd;
+        updateTrimLabels();
+        document.querySelectorAll('.fx-grid input').forEach(inp=>inp.dispatchEvent(new Event('input')));
+    });
+
+    window.addEventListener('keydown', e => {
+        if (e.code === 'Space' && selectedTrackId) { e.preventDefault(); isPlaying ? stopAudio() : playAudio(); }
+        if (e.code === 'KeyL') btnLoop.click();
+        if (e.code === 'KeyR' && !isLongFile) btnReverse.click();
+    });
+
+    function formatTime(s) { const m = Math.floor(s/60), sec = Math.floor(s%60); return `${m}:${sec.toString().padStart(2,'0')}`; }
+</script>
+</body>
+</html>
